@@ -1,0 +1,385 @@
+
+CREATE TABLE [Car]
+( 
+	[CAR_ID]             integer  NOT NULL ,
+	[BRAND]              varchar(20)  NULL ,
+	[MODEL]              varchar(20)  NULL 
+)
+go
+
+ALTER TABLE [Car]
+	ADD CONSTRAINT [XPKCar] PRIMARY KEY  CLUSTERED ([CAR_ID] ASC)
+go
+
+CREATE TABLE [Person]
+( 
+	[PERSON_ID]          integer  NOT NULL ,
+	[NAME]               varchar(20)  NULL ,
+	[DOB]                datetime  NULL 
+)
+go
+
+ALTER TABLE [Person]
+	ADD CONSTRAINT [XPKPerson] PRIMARY KEY  CLUSTERED ([PERSON_ID] ASC)
+go
+
+CREATE TABLE [Person_Car]
+( 
+	[PERSON_ID]          integer  NOT NULL ,
+	[CAR_ID]             integer  NOT NULL 
+)
+go
+
+ALTER TABLE [Person_Car]
+	ADD CONSTRAINT [XPKPerson_Car] PRIMARY KEY  CLUSTERED ([PERSON_ID] ASC,[CAR_ID] ASC)
+go
+
+
+ALTER TABLE [Person_Car]
+	ADD CONSTRAINT [R_6] FOREIGN KEY ([PERSON_ID]) REFERENCES [Person]([PERSON_ID])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+ALTER TABLE [Person_Car]
+	ADD CONSTRAINT [R_7] FOREIGN KEY ([CAR_ID]) REFERENCES [Car]([CAR_ID])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+CREATE TRIGGER tD_Person ON Person FOR DELETE AS
+/* erwin Builtin Trigger */
+/* DELETE trigger on Person */
+BEGIN
+  DECLARE  @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+    /* erwin Builtin Trigger */
+    /* Person  Person_Car on parent delete no action */
+    /* ERWIN_RELATION:CHECKSUM="00010a88", PARENT_OWNER="", PARENT_TABLE="Person"
+    CHILD_OWNER="", CHILD_TABLE="Person_Car"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_6", FK_COLUMNS="PERSON_ID" */
+    IF EXISTS (
+      SELECT * FROM deleted,Person_Car
+      WHERE
+        /*  %JoinFKPK(Person_Car,deleted," = "," AND") */
+        Person_Car.PERSON_ID = deleted.PERSON_ID
+    )
+    BEGIN
+      SELECT @errno  = 30001,
+             @errmsg = 'Cannot delete Person because Person_Car exists.'
+      GOTO error
+    END
+
+
+    /* erwin Builtin Trigger */
+    RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+
+
+CREATE TRIGGER tU_Person ON Person FOR UPDATE AS
+/* erwin Builtin Trigger */
+/* UPDATE trigger on Person */
+BEGIN
+  DECLARE  @numrows int,
+           @nullcnt int,
+           @validcnt int,
+           @insPERSON_ID integer,
+           @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+
+  SELECT @numrows = @@rowcount
+  /* erwin Builtin Trigger */
+  /* Person  Person_Car on parent update no action */
+  /* ERWIN_RELATION:CHECKSUM="0001315d", PARENT_OWNER="", PARENT_TABLE="Person"
+    CHILD_OWNER="", CHILD_TABLE="Person_Car"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_6", FK_COLUMNS="PERSON_ID" */
+  IF
+    /* %ParentPK(" OR",UPDATE) */
+    UPDATE(PERSON_ID)
+  BEGIN
+    IF EXISTS (
+      SELECT * FROM deleted,Person_Car
+      WHERE
+        /*  %JoinFKPK(Person_Car,deleted," = "," AND") */
+        Person_Car.PERSON_ID = deleted.PERSON_ID
+    )
+    BEGIN
+      SELECT @errno  = 30005,
+             @errmsg = 'Cannot update Person because Person_Car exists.'
+      GOTO error
+    END
+  END
+
+
+  /* erwin Builtin Trigger */
+  RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+
+
+CREATE TRIGGER tD_Car ON Car FOR DELETE AS
+/* erwin Builtin Trigger */
+/* DELETE trigger on Car */
+BEGIN
+  DECLARE  @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+    /* erwin Builtin Trigger */
+    /* Car  Person_Car on parent delete no action */
+    /* ERWIN_RELATION:CHECKSUM="00010a2f", PARENT_OWNER="", PARENT_TABLE="Car"
+    CHILD_OWNER="", CHILD_TABLE="Person_Car"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_7", FK_COLUMNS="CAR_ID" */
+    IF EXISTS (
+      SELECT * FROM deleted,Person_Car
+      WHERE
+        /*  %JoinFKPK(Person_Car,deleted," = "," AND") */
+        Person_Car.CAR_ID = deleted.CAR_ID
+    )
+    BEGIN
+      SELECT @errno  = 30001,
+             @errmsg = 'Cannot delete Car because Person_Car exists.'
+      GOTO error
+    END
+
+
+    /* erwin Builtin Trigger */
+    RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+
+
+CREATE TRIGGER tU_Car ON Car FOR UPDATE AS
+/* erwin Builtin Trigger */
+/* UPDATE trigger on Car */
+BEGIN
+  DECLARE  @numrows int,
+           @nullcnt int,
+           @validcnt int,
+           @insCAR_ID integer,
+           @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+
+  SELECT @numrows = @@rowcount
+  /* erwin Builtin Trigger */
+  /* Car  Person_Car on parent update no action */
+  /* ERWIN_RELATION:CHECKSUM="0001265d", PARENT_OWNER="", PARENT_TABLE="Car"
+    CHILD_OWNER="", CHILD_TABLE="Person_Car"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_7", FK_COLUMNS="CAR_ID" */
+  IF
+    /* %ParentPK(" OR",UPDATE) */
+    UPDATE(CAR_ID)
+  BEGIN
+    IF EXISTS (
+      SELECT * FROM deleted,Person_Car
+      WHERE
+        /*  %JoinFKPK(Person_Car,deleted," = "," AND") */
+        Person_Car.CAR_ID = deleted.CAR_ID
+    )
+    BEGIN
+      SELECT @errno  = 30005,
+             @errmsg = 'Cannot update Car because Person_Car exists.'
+      GOTO error
+    END
+  END
+
+
+  /* erwin Builtin Trigger */
+  RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+
+
+CREATE TRIGGER tD_Person_Car ON Person_Car FOR DELETE AS
+/* erwin Builtin Trigger */
+/* DELETE trigger on Person_Car */
+BEGIN
+  DECLARE  @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+    /* erwin Builtin Trigger */
+    /* Car  Person_Car on child delete no action */
+    /* ERWIN_RELATION:CHECKSUM="00025b36", PARENT_OWNER="", PARENT_TABLE="Car"
+    CHILD_OWNER="", CHILD_TABLE="Person_Car"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_7", FK_COLUMNS="CAR_ID" */
+    IF EXISTS (SELECT * FROM deleted,Car
+      WHERE
+        /* %JoinFKPK(deleted,Car," = "," AND") */
+        deleted.CAR_ID = Car.CAR_ID AND
+        NOT EXISTS (
+          SELECT * FROM Person_Car
+          WHERE
+            /* %JoinFKPK(Person_Car,Car," = "," AND") */
+            Person_Car.CAR_ID = Car.CAR_ID
+        )
+    )
+    BEGIN
+      SELECT @errno  = 30010,
+             @errmsg = 'Cannot delete last Person_Car because Car exists.'
+      GOTO error
+    END
+
+    /* erwin Builtin Trigger */
+    /* Person  Person_Car on child delete no action */
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Person"
+    CHILD_OWNER="", CHILD_TABLE="Person_Car"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_6", FK_COLUMNS="PERSON_ID" */
+    IF EXISTS (SELECT * FROM deleted,Person
+      WHERE
+        /* %JoinFKPK(deleted,Person," = "," AND") */
+        deleted.PERSON_ID = Person.PERSON_ID AND
+        NOT EXISTS (
+          SELECT * FROM Person_Car
+          WHERE
+            /* %JoinFKPK(Person_Car,Person," = "," AND") */
+            Person_Car.PERSON_ID = Person.PERSON_ID
+        )
+    )
+    BEGIN
+      SELECT @errno  = 30010,
+             @errmsg = 'Cannot delete last Person_Car because Person exists.'
+      GOTO error
+    END
+
+
+    /* erwin Builtin Trigger */
+    RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+
+
+CREATE TRIGGER tU_Person_Car ON Person_Car FOR UPDATE AS
+/* erwin Builtin Trigger */
+/* UPDATE trigger on Person_Car */
+BEGIN
+  DECLARE  @numrows int,
+           @nullcnt int,
+           @validcnt int,
+           @insPERSON_ID integer, 
+           @insCAR_ID integer,
+           @errno   int,
+           @severity int,
+           @state    int,
+           @errmsg  varchar(255)
+
+  SELECT @numrows = @@rowcount
+  /* erwin Builtin Trigger */
+  /* Car  Person_Car on child update no action */
+  /* ERWIN_RELATION:CHECKSUM="0002960d", PARENT_OWNER="", PARENT_TABLE="Car"
+    CHILD_OWNER="", CHILD_TABLE="Person_Car"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_7", FK_COLUMNS="CAR_ID" */
+  IF
+    /* %ChildFK(" OR",UPDATE) */
+    UPDATE(CAR_ID)
+  BEGIN
+    SELECT @nullcnt = 0
+    SELECT @validcnt = count(*)
+      FROM inserted,Car
+        WHERE
+          /* %JoinFKPK(inserted,Car) */
+          inserted.CAR_ID = Car.CAR_ID
+    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
+    
+    IF @validcnt + @nullcnt != @numrows
+    BEGIN
+      SELECT @errno  = 30007,
+             @errmsg = 'Cannot update Person_Car because Car does not exist.'
+      GOTO error
+    END
+  END
+
+  /* erwin Builtin Trigger */
+  /* Person  Person_Car on child update no action */
+  /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Person"
+    CHILD_OWNER="", CHILD_TABLE="Person_Car"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="", 
+    FK_CONSTRAINT="R_6", FK_COLUMNS="PERSON_ID" */
+  IF
+    /* %ChildFK(" OR",UPDATE) */
+    UPDATE(PERSON_ID)
+  BEGIN
+    SELECT @nullcnt = 0
+    SELECT @validcnt = count(*)
+      FROM inserted,Person
+        WHERE
+          /* %JoinFKPK(inserted,Person) */
+          inserted.PERSON_ID = Person.PERSON_ID
+    /* %NotnullFK(inserted," IS NULL","select @nullcnt = count(*) from inserted where"," AND") */
+    
+    IF @validcnt + @nullcnt != @numrows
+    BEGIN
+      SELECT @errno  = 30007,
+             @errmsg = 'Cannot update Person_Car because Person does not exist.'
+      GOTO error
+    END
+  END
+
+
+  /* erwin Builtin Trigger */
+  RETURN
+error:
+   RAISERROR (@errmsg, -- Message text.
+              @severity, -- Severity (0~25).
+              @state) -- State (0~255).
+    rollback transaction
+END
+
+go
+
+
+
